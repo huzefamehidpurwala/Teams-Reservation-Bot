@@ -50,34 +50,38 @@ class RRBOT extends TeamsActivityHandler {
 
       // * Routing Logic to route the msgs to the components
       let currentIntent = "";
-      const previousIntent = this.previousIntent.get(context, {});
-      const conversationData = this.conversationData.get(context, {});
+      const previousIntent = await this.previousIntent.get(context, {});
+      const conversationData = await this.conversationData.get(context, {});
+      console.log("previousIntent++++++", previousIntent);
+      console.log("conversationData********", conversationData);
       if (previousIntent.intentName && conversationData.endDialog === false) {
         currentIntent = previousIntent.intentName;
+        console.log("=if======== currentIntent", currentIntent);
       } else if (
         previousIntent.intentName &&
         conversationData.endDialog === false
       ) {
         currentIntent = txt;
+        console.log("====elseif===== currentIntent", currentIntent);
       } else {
         currentIntent = txt;
         await this.previousIntent.set(context, { intentName: txt });
+        console.log("=========else currentIntent", currentIntent);
       }
 
-      console.log("========= currentIntent", currentIntent);
       switch (currentIntent) {
         case "make reservation":
           // await context.sendActivity(MessageFactory.text("success"));
           console.log("make reservation checked entry");
+          await this.conversationData.set(context, { endDialog: false });
           try {
-            await this.conversationData.set(context, { endDialog: false });
             await this.makeReservationDialog.run(context, this.dialogState);
-            conversationData.endDialog =
-              await this.makeReservationDialog.isDialogComplete();
           } catch (error) {
             console.log("error ocurred", error);
           }
-          console.log("make reservation checked exit");
+          conversationData.endDialog =
+            await this.makeReservationDialog.isDialogComplete();
+          console.log("make reservation checked exit", `\n`);
           break;
 
         case "cancel reservation":
