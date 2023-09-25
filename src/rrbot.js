@@ -54,7 +54,7 @@ class RRBOT extends TeamsActivityHandler {
       const conversationData = await this.conversationData.get(context, {});
       // console.log("previousIntent++++++", previousIntent);
       // console.log("conversationData********", conversationData);
-      console.log("in ++++ rrbot.js===", conversationData.endDialog);
+      // console.log("in ++++ rrbot.js===", conversationData.endDialog);
       if (previousIntent.intentName && conversationData.endDialog === false) {
         currentIntent = previousIntent.intentName;
         // console.log("=if======== currentIntent", currentIntent);
@@ -83,11 +83,11 @@ class RRBOT extends TeamsActivityHandler {
             await this.conversationData.set(context, {
               endDialog: await this.makeReservationDialog.isDialogComplete(),
             });
-            console.log("in try catch rrbot.js===", conversationData.endDialog);
+            // console.log("in try catch rrbot.js===", conversationData.endDialog);
           } catch (error) {
             console.log("error ocurred", error);
           }
-          console.log("make reservation checked exit", `\n`);
+          // console.log("make reservation checked exit", `\n`);
           break;
 
         case "cancel reservation":
