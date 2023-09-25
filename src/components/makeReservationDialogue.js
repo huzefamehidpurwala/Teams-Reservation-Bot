@@ -119,8 +119,6 @@ class MakeReservationDialog extends ComponentDialog {
   }
 
   async run(turnContext, accessor) {
-    console.log("keseho", turnContext);
-    // await turnContext.sendActiviy(MessageFactory.text("Hello a new msg"));
     const dialogSet = new DialogSet(accessor);
     dialogSet.add(this);
     const dialogContext = await dialogSet.createContext(turnContext);
@@ -132,11 +130,11 @@ class MakeReservationDialog extends ComponentDialog {
       try {
         await dialogContext.beginDialog(this.id);
       } catch (error) {
-        console.log("error in mrd.run -> if", error);
+        // console.log("error in mrd.run -> if", error);
       }
-      console.log("i am in mrd.run -> if");
+      // console.log("i am in mrd.run -> if");
     } else {
-      console.log("i am in mrd.run -> else");
+      // console.log("i am in mrd.run -> else");
     }
   }
 
@@ -152,12 +150,18 @@ class MakeReservationDialog extends ComponentDialog {
 
   async getName(step) {
     // check whether user selected yes or no
-    console.log("in getName step");
+    // console.log("in getName step");
     if (step.result === true) {
       return await step.prompt(
         TEXT_PROMPT,
         "In what name is the reservation is to be made?"
       );
+    } else {
+      await step.context.sendActivity(
+        MessageFactory.text("Reservation Cancelled!")
+      );
+      endDialog = true;
+      return await step.endDialog();
     }
   }
 
@@ -165,7 +169,7 @@ class MakeReservationDialog extends ComponentDialog {
     step.values.name = step.result; // save the name entered by user in the previous step
     return await step.prompt(
       NUMBER_PROMPT,
-      "How many participants are going to be there(0-15)?"
+      "How many participants are going to be there(0-150)?"
     );
   }
 
@@ -187,14 +191,12 @@ class MakeReservationDialog extends ComponentDialog {
 
     let msg = "You entered following values:";
     Object.entries(step.values).forEach(([key, value]) => {
-      msg += `\n${key}: ${value}`;
+      msg += `\n${key}: ${JSON.stringify(value)}`;
     });
 
-    console.log("msgmsgsmsg======", msg);
-    console.log(`\n\n ${step}`);
-    console.log(`\n\n ${step.context}`);
+    // console.log("msgmsgsmsg======", msg);
 
-    await step.context.isendActivy(MessageFactory.text(msg));
+    await step.context.sendActivity(MessageFactory.text(msg));
     return await step.prompt(
       CONFIRM_PROMPT,
       "Are you sure the details correct and confirm the reservation?",
@@ -204,8 +206,14 @@ class MakeReservationDialog extends ComponentDialog {
 
   async summaryStep(step) {
     if (step.result === true) {
-      await step.context.sendActiviy(
+      await step.context.sendActivity(
         MessageFactory.text("Reservation Confirmed!")
+      );
+      endDialog = true;
+      return await step.endDialog();
+    } else {
+      await step.context.sendActivity(
+        MessageFactory.text("Reservation Cancelled!")
       );
       endDialog = true;
       return await step.endDialog();

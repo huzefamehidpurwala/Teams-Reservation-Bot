@@ -52,33 +52,38 @@ class RRBOT extends TeamsActivityHandler {
       let currentIntent = "";
       const previousIntent = await this.previousIntent.get(context, {});
       const conversationData = await this.conversationData.get(context, {});
-      console.log("previousIntent++++++", previousIntent);
-      console.log("conversationData********", conversationData);
+      // console.log("previousIntent++++++", previousIntent);
+      // console.log("conversationData********", conversationData);
+      console.log("in ++++ rrbot.js===", conversationData.endDialog);
       if (previousIntent.intentName && conversationData.endDialog === false) {
         currentIntent = previousIntent.intentName;
-        console.log("=if======== currentIntent", currentIntent);
+        // console.log("=if======== currentIntent", currentIntent);
       } else if (
         previousIntent.intentName &&
-        conversationData.endDialog === false
+        conversationData.endDialog === true
       ) {
         currentIntent = txt;
-        console.log("====elseif===== currentIntent", currentIntent);
+        await this.previousIntent.set(context, { intentName: "" });
+        // console.log("====elseif===== currentIntent", currentIntent);
       } else {
         currentIntent = txt;
         await this.previousIntent.set(context, { intentName: txt });
-        console.log("=========else currentIntent", currentIntent);
+        // console.log("=========else currentIntent", currentIntent);
       }
 
       switch (currentIntent) {
         case "make reservation":
           // await context.sendActivity(MessageFactory.text("success"));
-          console.log("make reservation checked entry");
+          // console.log("make reservation checked entry");
           try {
             await this.conversationData.set(context, { endDialog: false });
-            console.log("in try catch rrbot.js===", context);
             await this.makeReservationDialog.run(context, this.dialogState);
-            conversationData.endDialog =
-              await this.makeReservationDialog.isDialogComplete();
+            // conversationData.endDialog =
+            //   await this.makeReservationDialog.isDialogComplete();
+            await this.conversationData.set(context, {
+              endDialog: await this.makeReservationDialog.isDialogComplete(),
+            });
+            console.log("in try catch rrbot.js===", conversationData.endDialog);
           } catch (error) {
             console.log("error ocurred", error);
           }
