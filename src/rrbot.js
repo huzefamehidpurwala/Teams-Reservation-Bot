@@ -65,6 +65,7 @@ class RRBOT extends TeamsActivityHandler {
       }
 
       console.log("========= currentIntent", currentIntent);
+      console.log("========= currentIntent", currentIntent);
       switch (currentIntent) {
         case "make reservation":
           // await context.sendActivity(MessageFactory.text("success"));
