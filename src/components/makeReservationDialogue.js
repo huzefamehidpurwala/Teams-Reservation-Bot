@@ -119,6 +119,8 @@ class MakeReservationDialog extends ComponentDialog {
   }
 
   async run(turnContext, accessor) {
+    console.log("keseho", turnContext);
+    // await turnContext.sendActiviy(MessageFactory.text("Hello a new msg"));
     const dialogSet = new DialogSet(accessor);
     dialogSet.add(this);
     const dialogContext = await dialogSet.createContext(turnContext);
@@ -150,6 +152,7 @@ class MakeReservationDialog extends ComponentDialog {
 
   async getName(step) {
     // check whether user selected yes or no
+    console.log("in getName step");
     if (step.result === true) {
       return await step.prompt(
         TEXT_PROMPT,
@@ -187,7 +190,11 @@ class MakeReservationDialog extends ComponentDialog {
       msg += `\n${key}: ${value}`;
     });
 
-    await step.context.sendActiviy(MessageFactory.text(msg));
+    console.log("msgmsgsmsg======", msg);
+    console.log(`\n\n ${step}`);
+    console.log(`\n\n ${step.context}`);
+
+    await step.context.isendActivy(MessageFactory.text(msg));
     return await step.prompt(
       CONFIRM_PROMPT,
       "Are you sure the details correct and confirm the reservation?",

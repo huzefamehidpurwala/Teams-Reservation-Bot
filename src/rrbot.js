@@ -73,14 +73,15 @@ class RRBOT extends TeamsActivityHandler {
         case "make reservation":
           // await context.sendActivity(MessageFactory.text("success"));
           console.log("make reservation checked entry");
-          await this.conversationData.set(context, { endDialog: false });
           try {
+            await this.conversationData.set(context, { endDialog: false });
+            console.log("in try catch rrbot.js===", context);
             await this.makeReservationDialog.run(context, this.dialogState);
+            conversationData.endDialog =
+              await this.makeReservationDialog.isDialogComplete();
           } catch (error) {
             console.log("error ocurred", error);
           }
-          conversationData.endDialog =
-            await this.makeReservationDialog.isDialogComplete();
           console.log("make reservation checked exit", `\n`);
           break;
 
