@@ -117,8 +117,12 @@ class MakeReservationDialog extends ComponentDialog {
   }
 
   async isDateWithinRange(promptContext) {
-    // console.log(promptContext.recognized.value);
-    if (promptContext.recognized.value[0].type == "time") {
+    // console.log(promptContext.options.prompt);
+    // console.log(promptContext.recognized);
+    if (
+      promptContext.options.prompt.toLowerCase().search("time") !== -1 &&
+      promptContext.recognized.value[0].type == "time"
+    ) {
       // console.log("in if1", promptContext.recognized.value);
       if (promptContext.recognized.value.length > 1) {
         await promptContext.context.sendActivity(
@@ -132,7 +136,10 @@ class MakeReservationDialog extends ComponentDialog {
       }
     }
 
-    if (promptContext.recognized.value[0].type == "date") {
+    if (
+      promptContext.options.prompt.toLowerCase().search("date") !== -1 &&
+      promptContext.recognized.value[0].type == "date"
+    ) {
       // console.log("in if222", promptContext.recognized.value);
       if (promptContext.recognized.value.length > 1) {
         return false;
@@ -154,7 +161,7 @@ class MakeReservationDialog extends ComponentDialog {
         if (!isNaN(inputDate) && inputDate >= today && inputDate <= maxDate) {
           return true;
         } else {
-          await step.context.sendActivity(
+          await promptContext.context.sendActivity(
             MessageFactory.text(
               "Value is not in the range of 4 months from today!"
             )
@@ -164,7 +171,7 @@ class MakeReservationDialog extends ComponentDialog {
       }
     }
 
-    await step.context.sendActivity(MessageFactory.text("Invalid Value!"));
+    await promptContext.context.sendActivity(MessageFactory.text("Invalid Value!"));
     return false;
   }
 
