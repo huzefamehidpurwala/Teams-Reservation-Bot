@@ -1,4 +1,5 @@
-const { MessageFactory } = require("botbuilder");
+const { AdaptiveCards } = require("@microsoft/adaptivecards-tools");
+const { MessageFactory, CardFactory } = require("botbuilder");
 const {
   WaterfallDialog,
   ComponentDialog,
@@ -9,6 +10,7 @@ const {
   TextPrompt,
   DialogSet,
 } = require("botbuilder-dialogs");
+const confirmCard = require("../../adaptiveCards/makeReservationDetails.json");
 
 const CHOICE_PROMPT = "CHOICE_PROMPT";
 const CONFIRM_PROMPT = "CONFIRM_PROMPT";
@@ -30,7 +32,7 @@ class MakeReservationDialog extends ComponentDialog {
     this.addDialog(
       new NumberPrompt(NUMBER_PROMPT, this.numberofParticipantsValidator)
     ); // 2nd arg is the function to validate the user input
-    this.addDialog(new DateTimePrompt(DATETIME_PROMPT));
+    this.addDialog(new DateTimePrompt(DATETIME_PROMPT, this.isDateWithinRange));
 
     // * add waterfall dialog that consists of multiple steps
     this.addDialog(
@@ -114,6 +116,58 @@ class MakeReservationDialog extends ComponentDialog {
     );
   }
 
+  async isDateWithinRange(promptContext) {
+    // console.log(promptContext.recognized.value);
+    if (promptContext.recognized.value[0].type == "time") {
+      // console.log("in if1", promptContext.recognized.value);
+      if (promptContext.recognized.value.length > 1) {
+        await promptContext.context.sendActivity(
+          MessageFactory.text(
+            "Specify a proper time value in 12hr format or 24hr format!"
+          )
+        );
+        return false;
+      } else {
+        return true;
+      }
+    }
+
+    if (promptContext.recognized.value[0].type == "date") {
+      // console.log("in if222", promptContext.recognized.value);
+      if (promptContext.recognized.value.length > 1) {
+        return false;
+      }
+
+      if (promptContext.recognized.succeeded) {
+        // Get today's date
+        const today = new Date();
+        today.setDate(today.getDate() - 1);
+
+        // Calculate the maximum date (4 months from today)
+        const maxDate = new Date();
+        maxDate.setMonth(maxDate.getMonth() + 4);
+
+        // Parse the input date
+        const inputDate = new Date(promptContext.recognized.value[0].value);
+
+        // Check if the input date is a valid date and falls within the range
+        if (!isNaN(inputDate) && inputDate >= today && inputDate <= maxDate) {
+          return true;
+        } else {
+          await step.context.sendActivity(
+            MessageFactory.text(
+              "Value is not in the range of 4 months from today!"
+            )
+          );
+          return false;
+        }
+      }
+    }
+
+    await step.context.sendActivity(MessageFactory.text("Invalid Value!"));
+    return false;
+  }
+
   async isDialogComplete() {
     return endDialog;
   }
@@ -128,9 +182,10 @@ class MakeReservationDialog extends ComponentDialog {
     // if (results.status === DialogTurnStatus.empty) {
     if (results.status === "empty") {
       try {
+        // console.log("huze_________=++", this);
         await dialogContext.beginDialog(this.id);
       } catch (error) {
-        // console.log("error in mrd.run -> if", error);
+        console.log("error in mrd.run -> if", error);
       }
       // console.log("i am in mrd.run -> if");
     } else {
@@ -158,7 +213,7 @@ class MakeReservationDialog extends ComponentDialog {
       );
     } else {
       await step.context.sendActivity(
-        MessageFactory.text("Reservation Cancelled!")
+        MessageFactory.text("Process Terminated!")
       );
       endDialog = true;
       return await step.endDialog();
@@ -177,26 +232,47 @@ class MakeReservationDialog extends ComponentDialog {
     step.values.numOfParticipants = step.result; // save the num entered by user in the previous step
     return await step.prompt(
       DATETIME_PROMPT,
-      "On which Date you want to have the reservation?"
+      "On which Date you want to have the reservation? (values allowed maximum till 4-months from today)"
     );
   }
 
   async getTime(step) {
     step.values.date = step.result; // save the date entered by user in the previous step
-    return await step.prompt(NUMBER_PROMPT, "At what time?");
+    return await step.prompt(DATETIME_PROMPT, "At what time?");
   }
 
   async confirmStep(step) {
     step.values.time = step.result; // save the time entered by user in the previous step
 
-    let msg = "You entered following values:";
+    /* let msg = [];
     Object.entries(step.values).forEach(([key, value]) => {
-      msg += `\n${key}: ${JSON.stringify(value)}`;
+      for (const char of key) {
+        
+      }
+      if (typeof value === "string") {
+        msg.push({ key: key, value: value });
+      } else {
+        value[0]?.value
+          ? msg.push({ key: key, value: value[0]?.value })
+          : msg.push({ key: key, value: value });
+      }
+    }); */
+
+    // console.log("msgmsgsmsg======", { properties: msg });
+    const card = AdaptiveCards.declare(confirmCard).render({
+      properties: [
+        { key: "Name", value: step.values.name },
+        {
+          key: "Number of Passengers",
+          value: step.values.numOfParticipants,
+        },
+        { key: "Date of Journey", value: step.values.date[0].value },
+        { key: "Time of Journey", value: step.values.time[0].value },
+      ],
     });
-
-    // console.log("msgmsgsmsg======", msg);
-
-    await step.context.sendActivity(MessageFactory.text(msg));
+    await step.context.sendActivity({
+      attachments: [CardFactory.adaptiveCard(card)],
+    });
     return await step.prompt(
       CONFIRM_PROMPT,
       "Are you sure the details correct and confirm the reservation?",
@@ -209,15 +285,13 @@ class MakeReservationDialog extends ComponentDialog {
       await step.context.sendActivity(
         MessageFactory.text("Reservation Confirmed!")
       );
-      endDialog = true;
-      return await step.endDialog();
     } else {
       await step.context.sendActivity(
-        MessageFactory.text("Reservation Cancelled!")
+        MessageFactory.text("Process Terminated!")
       );
-      endDialog = true;
-      return await step.endDialog();
     }
+    endDialog = true;
+    return await step.endDialog();
   }
 }
 
