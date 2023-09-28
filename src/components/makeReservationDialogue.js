@@ -18,6 +18,12 @@ const TEXT_PROMPT = "TEXT_PROMPT";
 const NUMBER_PROMPT = "NUMBER_PROMPT";
 const DATETIME_PROMPT = "DATETIME_PROMPT";
 const WATERFALL_DIALOG = "WATERFALL_DIALOG";
+const objPropNames = {
+  name: "Name of Passenger",
+  numOfParticipants: "Number of Passengers",
+  date: "Date of Journey",
+  time: "Time of Journey",
+};
 let endDialog = "";
 
 class MakeReservationDialog extends ComponentDialog {
@@ -171,7 +177,9 @@ class MakeReservationDialog extends ComponentDialog {
       }
     }
 
-    await promptContext.context.sendActivity(MessageFactory.text("Invalid Value!"));
+    await promptContext.context.sendActivity(
+      MessageFactory.text("Invalid Value!")
+    );
     return false;
   }
 
@@ -228,7 +236,7 @@ class MakeReservationDialog extends ComponentDialog {
   }
 
   async getNumberofParticipants(step) {
-    step.values.name = step.result; // save the name entered by user in the previous step
+    step.values[objPropNames.name] = step.result; // save the name entered by user in the previous step
     return await step.prompt(
       NUMBER_PROMPT,
       "How many participants are going to be there(0-150)?"
@@ -236,7 +244,7 @@ class MakeReservationDialog extends ComponentDialog {
   }
 
   async getDate(step) {
-    step.values.numOfParticipants = step.result; // save the num entered by user in the previous step
+    step.values[objPropNames.numOfParticipants] = step.result; // save the num entered by user in the previous step
     return await step.prompt(
       DATETIME_PROMPT,
       "On which Date you want to have the reservation? (values allowed maximum till 4-months from today)"
@@ -244,29 +252,28 @@ class MakeReservationDialog extends ComponentDialog {
   }
 
   async getTime(step) {
-    step.values.date = step.result; // save the date entered by user in the previous step
+    step.values[objPropNames.date] = step.result; // save the date entered by user in the previous step
     return await step.prompt(DATETIME_PROMPT, "At what time?");
   }
 
   async confirmStep(step) {
-    step.values.time = step.result; // save the time entered by user in the previous step
+    step.values[objPropNames.time] = step.result; // save the time entered by user in the previous step
 
-    /* let msg = [];
+    let msg = [];
     Object.entries(step.values).forEach(([key, value]) => {
-      for (const char of key) {
-        
-      }
       if (typeof value === "string") {
-        msg.push({ key: key, value: value });
+        key !== "instanceId"
+          ? msg.push({ key, value })
+          : msg.push({ key: "Ticket ID", value });
       } else {
         value[0]?.value
           ? msg.push({ key: key, value: value[0]?.value })
-          : msg.push({ key: key, value: value });
+          : msg.push({ key, value });
       }
-    }); */
+    });
 
     // console.log("msgmsgsmsg======", { properties: msg });
-    const card = AdaptiveCards.declare(confirmCard).render({
+    /* const card = AdaptiveCards.declare(confirmCard).render({
       properties: [
         { key: "Name", value: step.values.name },
         {
@@ -276,7 +283,11 @@ class MakeReservationDialog extends ComponentDialog {
         { key: "Date of Journey", value: step.values.date[0].value },
         { key: "Time of Journey", value: step.values.time[0].value },
       ],
+    }); */
+    const card = AdaptiveCards.declare(confirmCard).render({
+      properties: msg,
     });
+
     await step.context.sendActivity({
       attachments: [CardFactory.adaptiveCard(card)],
     });

@@ -30,7 +30,7 @@ const botFrameworkAuthentication = new ConfigurationBotFrameworkAuthentication(
   credentialsFactory
 );
 
-const adapter = new CloudAdapter(botFrameworkAuthentication);
+/* const adapter = new CloudAdapter(botFrameworkAuthentication);
 
 adapter.onTurnError = async (context, error) => {
   // This check writes out errors to console log .vs. app insights.
@@ -46,9 +46,9 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity(
     "To continue to run this bot, please fix the bot source code."
   );
-};
+}; */
 
-// const ytbadapter = new BotFrameworkAdapter({});
+const ytbadapter = new BotFrameworkAdapter({});
 
 // in-memory storage
 const memoryStorage = new MemoryStorage();
@@ -66,17 +66,17 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 });
 
 // Listen for incoming requests.
-server.post("/api/messages", async (req, res) => {
-  await adapter.process(req, res, async (context) => {
-    // console.log(context, "context");
-    await bot.run(context);
-  });
-});
 // server.post("/api/messages", async (req, res) => {
-//   await ytbadapter.processActivity(req, res, async (context) => {
+//   await adapter.process(req, res, async (context) => {
+//     // console.log(context, "context");
 //     await bot.run(context);
 //   });
 // });
+server.post("/api/messages", async (req, res) => {
+  await ytbadapter.processActivity(req, res, async (context) => {
+    await bot.run(context);
+  });
+});
 
 // Gracefully shutdown HTTP server
 [
